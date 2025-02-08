@@ -1,5 +1,7 @@
 # Crawl4AI MCP Server
 
+[![smithery badge](https://smithery.ai/badge/@weidwonder/crawl4ai-mcp-server)](https://smithery.ai/server/@weidwonder/crawl4ai-mcp-server)
+
 这是一个基于MCP (Model Context Protocol)的智能信息获取服务器,为AI助手系统提供强大的搜索能力和面向LLM优化的网页内容理解功能。通过多引擎搜索和智能内容提取,帮助AI系统高效获取和理解互联网信息,将网页内容转换为最适合LLM处理的格式。
 
 ## 特性
@@ -11,6 +13,14 @@
 - 🚀 基于FastMCP的高性能异步设计
 
 ## 安装
+
+### 安装到Claude桌面客户端 via Smithery
+
+通过 [Smithery](https://smithery.ai/server/@weidwonder/crawl4ai-mcp-server) 将 Crawl4AI MCP 的 Claude 桌面端服务安装自动配置至您本地的 `Claude 伸展中心`:
+
+```bash
+npx -y @smithery/cli install @weidwonder/crawl4ai-mcp-server --client claude
+```
 
 1. 确保您的系统满足以下要求:
    - Python >= 3.9
