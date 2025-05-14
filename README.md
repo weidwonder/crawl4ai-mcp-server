@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/weidwonder-crawl4ai-mcp-server-badge.png)](https://mseep.ai/app/weidwonder-crawl4ai-mcp-server)
+
 # Crawl4AI MCP Server
 
 [![smithery badge](https://smithery.ai/badge/@weidwonder/crawl4ai-mcp-server)](https://smithery.ai/server/@weidwonder/crawl4ai-mcp-server)
