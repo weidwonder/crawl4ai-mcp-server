@@ -4,7 +4,7 @@ import json
 import os
 import logging
 from abc import ABC, abstractmethod
-from duckduckgo_search import DDGS
+from ddgs import DDGS
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ class DuckDuckGoSearch(SearchEngine):
             # 使用duckduckgo_search库进行搜索
             # 设置region为wt-wt(全球),safesearch为moderate(适中)
             raw_results = self.ddgs.text(
-                keywords=query,
+                query,
                 region="wt-wt",
                 safesearch="moderate",
                 max_results=num_results
