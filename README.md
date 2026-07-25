@@ -8,7 +8,7 @@
 
 ## 特性
 
-- 🔍 强大的多引擎搜索能力,支持DuckDuckGo和Google
+- 🔍 强大的多引擎搜索能力,支持DuckDuckGo、Google和You.com
 - 📚 面向LLM优化的网页内容提取,智能过滤非核心内容
 - 🎯 专注信息价值,自动识别和保留关键内容
 - 📝 多种输出格式,支持引用溯源
@@ -63,6 +63,7 @@ npx -y @smithery/cli install @weidwonder/crawl4ai-mcp-server --client claude
 
 - DuckDuckGo搜索(默认): 无需API密钥,全面处理AbstractText、Results和RelatedTopics
 - Google搜索: 需要配置API密钥,提供精准搜索结果
+- You.com搜索: 需要配置API密钥,提供高质量搜索结果
 - 支持同时使用多个引擎获取更全面的结果
 
 参数说明:
@@ -71,6 +72,7 @@ npx -y @smithery/cli install @weidwonder/crawl4ai-mcp-server --client claude
 - `engine`: 搜索引擎选择
   - "duckduckgo": DuckDuckGo搜索(默认)
   - "google": Google搜索(需要API密钥)
+  - "youcom": You.com搜索(需要API密钥)
   - "all": 同时使用所有可用的搜索引擎
 
 示例:
@@ -133,6 +135,16 @@ npx -y @smithery/cli install @weidwonder/crawl4ai-mcp-server --client claude
 }
 ```
 
+如需使用You.com搜索,需要在config.json中配置API密钥:
+```json
+{
+    "youcom": {
+        "api_key": "your-youcom-api-key",
+        "max_results": 10
+    }
+}
+```
+
 ## LLM内容优化
 
 服务器采用了一系列针对LLM的内容优化策略:
@@ -174,8 +186,19 @@ cp config_demo.json config.json
 }
 ```
 
+3. 如需使用You.com搜索,在config.json中配置API密钥:
+```json
+{
+    "youcom": {
+        "api_key": "your-youcom-api-key",
+        "max_results": 10
+    }
+}
+```
+
 ## 更新日志
 
+- 2026.07.25: 添加You.com搜索支持,可在config.json中配置API密钥使用
 - 2025.02.08: 添加搜索功能,支持DuckDuckGo(默认)和Google搜索
 - 2025.02.07: 重构项目结构,使用FastMCP实现,优化依赖管理
 - 2025.02.07: 优化内容过滤配置,提高token效率并保持URL完整性

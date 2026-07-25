@@ -60,6 +60,72 @@ class DuckDuckGoSearch(SearchEngine):
             logger.error(f"DuckDuckGo search failed: {str(e)}")
             return []
 
+class YoucomSearch(SearchEngine):
+    """You.com Search API backend.
+
+    API: POST https://ydc-index.io/v1/search
+    Auth: X-API-Key header
+    Docs: https://you.com/specs/openapi_search_v1.yaml
+    """
+
+    BASE_URL = "https://ydc-index.io/v1/search"
+
+    def __init__(self, api_key: str, max_results: int = 10):
+        self.api_key = api_key
+        self.max_results = max_results
+
+    async def search(self, query: str, num_results: int = 10) -> List[SearchResult]:
+        if not self.api_key:
+            logger.warning("You.com search credentials not configured")
+            return []
+
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            try:
+                payload = {"query": query, "count": min(num_results, self.max_results)}
+                response = await client.post(
+                    self.BASE_URL,
+                    headers={
+                        "X-API-Key": self.api_key,
+                        "Content-Type": "application/json",
+                    },
+                    json=payload,
+                )
+                response.raise_for_status()
+                data = response.json()
+
+                web_results = data.get("results", {}).get("web", [])
+                results = []
+                for item in web_results:
+                    snippet = (
+                        item.get("snippets", [None])[0]
+                        if item.get("snippets")
+                        else item.get("description", "")
+                    )
+                    results.append(
+                        SearchResult(
+                            title=item.get("title", ""),
+                            link=item.get("url", ""),
+                            snippet=snippet or "",
+                            source="youcom",
+                        )
+                    )
+
+                logger.info(f"You.com search successful for query: {query}")
+                return results
+
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code == 401:
+                    logger.error("You.com API key is invalid or expired")
+                elif e.response.status_code == 403:
+                    logger.error("You.com API key lacks required permissions")
+                else:
+                    logger.error(f"You.com search failed: {str(e)}")
+                return []
+            except Exception as e:
+                logger.error(f"You.com search failed: {str(e)}")
+                return []
+
+
 class GoogleSearch(SearchEngine):
     def __init__(self, api_key: str, cse_id: str):
         self.api_key = api_key
@@ -70,16 +136,16 @@ class GoogleSearch(SearchEngine):
         if not self.api_key or not self.cse_id:
             logger.warning("Google search credentials not configured")
             return []
-            
+
         async with httpx.AsyncClient(timeout=10.0) as client:
             try:
                 params = {
-                    'key': self.api_key,
-                    'cx': self.cse_id,
-                    'q': query,
-                    'num': min(num_results, 10)
+                    "key": self.api_key,
+                    "cx": self.cse_id,
+                    "q": query,
+                    "num": min(num_results, 10),
                 }
-                
+
                 logger.info(f"Sending request to Google: {query}")
                 response = await client.get(self.base_url, params=params)
                 response.raise_for_status()
@@ -88,17 +154,20 @@ class GoogleSearch(SearchEngine):
             except Exception as e:
                 logger.error(f"Google search failed: {str(e)}")
                 return []
-            
+
             results = []
-            for item in data.get('items', []):
-                results.append(SearchResult(
-                    title=item.get('title', ''),
-                    link=item.get('link', ''),
-                    snippet=item.get('snippet', ''),
-                    source='google'
-                ))
-                
+            for item in data.get("items", []):
+                results.append(
+                    SearchResult(
+                        title=item.get("title", ""),
+                        link=item.get("link", ""),
+                        snippet=item.get("snippet", ""),
+                        source="google",
+                    )
+                )
+
             return results
+
 
 class SearchManager:
     def __init__(self):
@@ -108,8 +177,8 @@ class SearchManager:
     def _initialize_engines(self):
         # 总是添加DuckDuckGo搜索
         self.engines.append(DuckDuckGoSearch())
-        
-        # 如果配置文件存在,尝试添加Google搜索
+
+        # 如果配置文件存在,尝试添加Google搜索和You.com搜索
         config_path = os.path.join(os.path.dirname(__file__), '..', 'config.json')
         if os.path.exists(config_path):
             try:
@@ -122,8 +191,15 @@ class SearchManager:
                             api_key=google_config['api_key'],
                             cse_id=google_config['cse_id']
                         ))
+                if 'youcom' in config:
+                    youcom_config = config['youcom']
+                    if youcom_config.get('api_key'):
+                        self.engines.append(YoucomSearch(
+                            api_key=youcom_config['api_key'],
+                            max_results=youcom_config.get('max_results', 10)
+                        ))
             except Exception as e:
-                print(f"Failed to load Google search configuration: {e}")
+                print(f"Failed to load search engine configuration: {e}")
                 
     async def search(self, query: str, num_results: int = 10, engine: str = "duckduckgo") -> List[Dict]:
         all_results = []
@@ -140,6 +216,8 @@ class SearchManager:
                 engine_type = 'duckduckgo'
             elif engine_name.startswith('google'):
                 engine_type = 'google'
+            elif engine_name.startswith('youcom'):
+                engine_type = 'youcom'
             else:
                 engine_type = engine_name
                 
