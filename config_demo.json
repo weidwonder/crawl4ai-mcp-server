@@ -2,5 +2,9 @@
     "google": {
         "api_key": "your-google-api-key",
         "cse_id": "your-google-cse-id"
+    },
+    "youcom": {
+        "api_key": "",
+        "max_results": 10
     }
 }
