@@ -100,6 +100,54 @@ class GoogleSearch(SearchEngine):
                 
             return results
 
+class SerpBaseSearch(SearchEngine):
+    """Google web search via SerpBase REST API.
+
+    Requires SERPBASE_API_KEY environment variable.
+    When unset, logs a warning and returns empty results — other engines
+    continue unaffected.
+    """
+
+    def __init__(self):
+        self.api_key = os.environ.get("SERPBASE_API_KEY", "")
+        self.api_url = "https://api.serpbase.dev/google/search"
+
+    async def search(self, query: str, num_results: int = 10) -> List[SearchResult]:
+        if not self.api_key:
+            logger.warning(
+                "SERPBASE_API_KEY not set — skipping SerpBase. "
+                "Get a key at https://serpbase.dev"
+            )
+            return []
+
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            try:
+                params = {
+                    "q": query,
+                    "num": num_results,
+                    "api_key": self.api_key,
+                }
+                logger.info(f"Sending request to SerpBase: {query}")
+                response = await client.get(self.api_url, params=params)
+                response.raise_for_status()
+                data = response.json()
+                logger.info("SerpBase search request successful")
+            except Exception as e:
+                logger.error(f"SerpBase search failed: {str(e)}")
+                return []
+
+        results = []
+        for item in data.get("organic_results", []):
+            results.append(SearchResult(
+                title=item.get("title", ""),
+                link=item.get("link", ""),
+                snippet=item.get("snippet", ""),
+                source="serpbase",
+            ))
+
+        return results
+
+
 class SearchManager:
     def __init__(self):
         self.engines: List[SearchEngine] = []
@@ -108,7 +156,10 @@ class SearchManager:
     def _initialize_engines(self):
         # 总是添加DuckDuckGo搜索
         self.engines.append(DuckDuckGoSearch())
-        
+
+        # 总是添加SerpBase搜索 (当SERPBASE_API_KEY环境变量未设置时会自动跳过)
+        self.engines.append(SerpBaseSearch())
+
         # 如果配置文件存在,尝试添加Google搜索
         config_path = os.path.join(os.path.dirname(__file__), '..', 'config.json')
         if os.path.exists(config_path):
@@ -140,6 +191,8 @@ class SearchManager:
                 engine_type = 'duckduckgo'
             elif engine_name.startswith('google'):
                 engine_type = 'google'
+            elif engine_name.startswith('serpbase'):
+                engine_type = 'serpbase'
             else:
                 engine_type = engine_name
                 
