@@ -123,6 +123,8 @@ async def search(query: str, num_results: int = 10, engine: str = "duckduckgo") 
         engine: 使用的搜索引擎,可选值:
             - "duckduckgo": 使用DuckDuckGo搜索(默认)
             - "google": 使用Google搜索(需要配置API密钥)
+            - "serpbase": 使用SerpBase API进行Google搜索(需要设置SERPBASE_API_KEY环境变量)
+            - "all": 使用所有可用的搜索引擎
     """
     global search_manager
     try:
